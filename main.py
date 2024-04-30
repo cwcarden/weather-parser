@@ -2,6 +2,8 @@ import requests
 import sqlite3
 import os 
 from dotenv import load_dotenv
+from datetime import datetime, timezone
+from dateutil import parser
 
 load_dotenv()
 
@@ -29,8 +31,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS weather (
                     windspeedmph REAL,
                     windgustmph REAL,
                     eventrainin REAL,
-                    weeklyrainin REAL,
-                    monthlyrainin REAL
+                    lastRain INTEGER
                 )''')
 
 try:
@@ -42,16 +43,15 @@ try:
     # Assumes only one record; modify if multiple
     record = data[0]
     cursor.execute('''INSERT INTO weather (
-                        dateutc, tempf, humidity, windspeedmph, windgustmph, eventrainin, weeklyrainin, monthlyrainin
-                      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (
+                        dateutc, tempf, humidity, windspeedmph, windgustmph, eventrainin, lastRain
+                      ) VALUES (?, ?, ?, ?, ?, ?, ?)''', (
                         record['dateutc'],
                         record['tempf'],
                         record['humidity'],
                         record['windspeedmph'],
                         record['windgustmph'],
                         record['eventrainin'],
-                        record['weeklyrainin'],
-                        record['monthlyrainin']
+                        record['lastRain'],
                       ))
 
     conn.commit()
@@ -61,3 +61,18 @@ except requests.exceptions.RequestException as e:
 
 finally:
     conn.close()
+    #last_rain = (data[0]['lastRain'])
+
+# Returns true if has been 48 hours since last rain
+    def is_48_hours_old():
+        last_rain = (data[0]['lastRain'])
+        date = parser.parse(last_rain)
+        current_date = datetime.now(timezone.utc)
+        time_difference = current_date - date
+        return (time_difference.total_seconds() >= 48 * 3600) 
+
+
+    def is_raining():
+        if (data[0]['eventrainin']) == 0:
+            return False
+        
