@@ -85,3 +85,4 @@ finally:
     def is_windy():
         if (data[0]['windspeedmph'] > 15):
             return True
+
